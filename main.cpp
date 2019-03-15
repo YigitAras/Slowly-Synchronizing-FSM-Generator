@@ -119,12 +119,23 @@ bool syncCheck(int* a, int* iap, int* ia, int N, int P) {
                 }
 
                 //cout << "automata is not synchronizing. pair " << id << " - (" << i << ", " << j << ") is not mergable\n";
+		delete [] levels;
+		delete [] distance;
+		delete [] letter;
+		delete [] que;
+		delete [] next;
                 return false;
             } else {
                 levels[distance[id]]++;
             }
         }
     }
+
+    delete [] levels;
+    delete [] distance;
+    delete [] letter;
+    delete [] que;
+    delete [] next;
     return true;
 }
 
@@ -249,6 +260,9 @@ unsigned long long int shortestPath(int* a, int N, int P, PNode* &path) {
     //     cout << seq[i] << " ";
     // }
     //cout << endl << "Shortest Path Length:" << length << endl;
+    delete [] distance;
+    delete [] prev;
+    delete [] letter;
     return length;
 }
 
@@ -399,7 +413,7 @@ void node_wise_mix(int N,int P,int K,int a_amount,vector<Auto> &alist){
 
 
 }
-// not finished , after tests deemed unnecessary to implement
+
 void alphabet_wise_mix(int N,int P,int K,int a_amount,vector<Auto> &alist){
     random_device ad;
     mt19937 generator(ad());
@@ -434,7 +448,8 @@ int main(int argc,  char** argv)
     int auto_amounts;
     int cycles;
     int ratio;
-    /*
+    
+
     if (argc != 6)
     {
         cout << "Usage: " << argv[0] << " no_states, alphabet_size, population size,cylces,extinction ratio \n" << endl;
@@ -445,19 +460,24 @@ int main(int argc,  char** argv)
     auto_amounts = atoi(argv[3]);
     cycles = atoi(argv[4]);
     ratio = atoi(argv[5]);
-*/
 
-     cin >> N >> P >> auto_amounts >> cycles >> ratio;
+    //     cin >> N >> P >> auto_amounts >> cycles >> ratio;
+
+     int high_ = (N-1)*(N-1);
+     int low = high_ - floor(high_*45/100);
+     int NUM_OF_ELITES = 7;
 
 
 
     vector<Auto> automata_list;
 
     string file_name = "genetic_log_" + to_string(N) + "_" + to_string(P) +".txt";
-    fstream out(file_name, fstream::in | fstream::out | fstream::app);
+    string file_name2  = "high_points_" + to_string(N) + "_" + to_string(P)  + ".txt";
+    fstream out(file_name2, fstream::in | fstream::out | fstream::app);
     if(!out){
         fstream out(file_name, fstream::in | fstream::out | fstream::trunc);
     }
+
 
     random_device rd;
     mt19937 gen(rd());
@@ -470,17 +490,11 @@ int main(int argc,  char** argv)
     while(automata_list.size() < auto_amounts) {
         int * automata = new int[N*P];
 
-
         for (int i = 0; i < P * N; ++i) {
             automata[i] =  dis(gen);
-
         }
 
-
-
-
         // black magic below
-
         int* inv_automata_ptrs = new int[P * (N + 1)];
         int* inv_automata = new int[P * N];
 
@@ -509,21 +523,19 @@ int main(int argc,  char** argv)
             temp.score = shortest;
             automata_list.push_back(temp);
             //cout << "One added to the list... \n";
-        }
-        else{
-            // it is not synchronizing and/or doesnt have inverse
-            delete[] automata;
-            delete[] inv_automata_ptrs;
-            delete[] inv_automata;
-
-        }
+        } else {
+	  delete[] automata;   
+	}
 
 #ifdef DEBUG
         // printAutomata(automata, N, P);
 #endif
 
+	// it is not synchronizing and/or doesnt have inverse
+	delete[] inv_automata_ptrs;
+	delete[] inv_automata;
     }
-
+    /*
     cout << "The population for the genetic algorithm has been created... \n";
 
     out << "Randomly created population:\n";
@@ -535,7 +547,7 @@ int main(int argc,  char** argv)
     }
 
     out << "Average: " << ftotal_score/automata_list.size() << "\n";
-
+    */
 
     // begin genetic cycle
     // can easily migrate this into a function
@@ -563,13 +575,17 @@ int main(int argc,  char** argv)
         // mutate < ------- > mutate
         // TODO : Below goes into infinite so put checks...
 
-        for(int i=4;i < automata_list.size();) {
+        // INT HERE DICTATES THE ELITE NUMBER
+        for(int i=NUM_OF_ELITES;i < automata_list.size();) {
             vector<int> re(N*P);
             if (dis3(gen) == 5) {
                 // will mutate now
                 int *ptr = automata_list[i].automata;
                 for(int j = 0 ; j< N*P;j++){
                     int r = dis2(gen);
+
+
+
                     // ADD THE MUTATION LOGICS BELOW WITH THEIR PROBABILITIES **
                     if(r == 5 || r== 7 || r==0){
                     re[j] = ptr[j];
@@ -581,8 +597,10 @@ int main(int argc,  char** argv)
                         //mutateSelfLoop(ptr,j,P);
                         mutateInDegree(ptr,N,P,j);
 
+                    }else if(r==2){
+                        mutateSelfLoop(ptr,j,P);
                     }
-                    
+
                     // MUTATION LOGICS ABOVE *************************************
 
                 }
@@ -613,13 +631,13 @@ int main(int argc,  char** argv)
                         if(re[z] != 0) ptr[z] = re[z];
                     }
                 }
+		delete [] inv_automata_ptrs;
+		delete [] inv_automata;
             }
             else{i++;}
 
         }
         sort(automata_list.begin(),automata_list.end(),comparison);
-
-
 
         // cross < ---  > over
         for(int K=modif; K < automata_list.size();){
@@ -663,17 +681,14 @@ int main(int argc,  char** argv)
                     K++;
 
                 }
-                else{
-                    // it is not synchronizing
-
-                    delete[] inv_automata;
-                    delete[] inv_automata_ptrs;
-                }
-
-
+         
+		delete [] inv_automata;
+		delete [] inv_automata_ptrs;
+         
         }
         cycles--;
         Generation_++;
+        /*
         if(Generation_ %5000 == 0) {
             out << " Generation: " << Generation_ << "\n";
             unsigned long long int total_score = 0;
@@ -693,6 +708,59 @@ int main(int argc,  char** argv)
 
             out << "============================================================================ \n";
         }
+         */
+
+
+        for(int ii=0; ii< NUM_OF_ELITES; ii++){
+            if(automata_list[ii].score > low){
+                int rndm = dis2(gen);
+
+                // take with probabilty from elites to let the growth
+                if(rndm == 5){
+                    writeAutomata(automata_list[ii].automata,N,P,out);
+                    out  << "score: " << automata_list[ii].score << "\n";
+
+                    bool check = true;
+
+                    while(check) {
+                        // clean the automata
+                        complete_random(N, P, ii, auto_amounts, automata_list);
+                        int *inv_automata_ptrs = new int[P * (N + 1)];
+                        int *inv_automata = new int[P * N];
+
+                        for (int i = 0; i < P; ++i) {
+                            int *a = &(automata_list[ii].automata[i * N]);
+                            int *ia = &(inv_automata[i * N]);
+                            int *iap = &(inv_automata_ptrs[i * (N + 1)]);
+
+                            memset(iap, 0, sizeof(int) * (N + 1));
+                            for (int j = 0; j < N; j++) { iap[a[j] + 1]++; }
+                            for (int j = 1; j <= N; j++) { iap[j] += iap[j - 1]; }
+                            for (int j = 0; j < N; j++) { ia[iap[a[j]]++] = j; }
+                            for (int j = N; j > 0; j--) { iap[j] = iap[j - 1]; }
+                            iap[0] = 0;
+                        }
+
+                        // check if these things return true
+                        bool isSync = syncCheck(automata_list[ii].automata, inv_automata_ptrs, inv_automata, N, P);
+                        // if it fits our criteria, put it into the list
+                        if(isSync){
+                            PNode *path = nullptr;
+                            unsigned long long int shortest = shortestPath(automata_list[ii].automata, N, P, path);
+                            automata_list[ii].score = shortest;
+                            check = false;
+
+                        }
+
+			delete[] inv_automata;
+			delete[] inv_automata_ptrs;
+		    }
+
+                }
+            }
+        }
+
+
     }
     /*
     sort(automata_list.begin(),automata_list.end(),comparison);
