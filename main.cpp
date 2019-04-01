@@ -8,6 +8,7 @@
 #include <string>
 #include <fstream>
 #include <random>
+#include <stdlib.h>
 
 #define DEBUG
 
@@ -17,6 +18,15 @@
 #define s2fromId(id, s1) (id - ((s1 * (s1 + 1))/2));
 
 using namespace std;
+
+
+#define MUTATE_SELF 0;
+#define MUTATE_INDEG 1;
+#define THREE_CROSS 2;
+#define NODE_WISE 3;
+#define COMP_RAND 4;
+#define RAND_MUT 5;
+#define ALPH_WISE 6;
 
 struct PNode{
     int letter;
@@ -119,11 +129,11 @@ bool syncCheck(int* a, int* iap, int* ia, int N, int P) {
                 }
 
                 //cout << "automata is not synchronizing. pair " << id << " - (" << i << ", " << j << ") is not mergable\n";
-		delete [] levels;
-		delete [] distance;
-		delete [] letter;
-		delete [] que;
-		delete [] next;
+                delete [] levels;
+                delete [] distance;
+                delete [] letter;
+                delete [] que;
+                delete [] next;
                 return false;
             } else {
                 levels[distance[id]]++;
@@ -305,6 +315,7 @@ bool checkInverse(int *a, int* iap, int* ia, int N, int P) {
 struct Auto{
     int * automata= nullptr;
     unsigned long long int  score=0;
+    long long int stats[7] = {0,0,0,0,0,0,0};
     /*
     ~Auto(){
         delete[] automata;
@@ -319,8 +330,8 @@ bool comparison(Auto a, Auto b){
 
 // BELOW ARE DIFFERENT MUTATION TECHNIQUES ------------------------------------------------------
 
-void mutateSelfLoop(int *ptr,int loc, int P){
-    ptr[loc] = int(floor(loc/P));
+void mutateSelfLoop(int *ptr,int loc, int N){
+        ptr[loc] = (loc%N);
 };
 
 void mutateInDegree(int *ptr, int N, int P,int j){
@@ -328,17 +339,17 @@ void mutateInDegree(int *ptr, int N, int P,int j){
 
     // calculate the indegs for each Node
     for(int i=0;i<N*P;i++){
-        indegs[ptr[i]] +=1;
+        indegs[ptr[i]] ++;
     }
     // sort(indegs.begin(),indegs.end());
-
+    /*
     random_device ran;
     mt19937 gn(ran());
     std::uniform_int_distribution<> diss(0,N*P);
-
-    int min = N*P*2;
+*/
+    int min = N*P+1;
     int loc;
-    for(int i = 0;i<indegs.size();i++){
+    for(int i = 0;i<N;i++){
         if(indegs[i]<=min) {
             min = indegs[i];
             loc = i;
@@ -400,17 +411,13 @@ void node_wise_mix(int N,int P,int K,int a_amount,vector<Auto> &alist){
     std::uniform_int_distribution<> dis3(0,N-1);
     std::uniform_int_distribution<> dis4(0,a_amount-1);
     int *target = alist[K].automata;
-    for(int i = 0; i<N*P; i = i+P){
+    for(int i = 0; i<N; i ++){
         int pop_tar = dis4(generator);
         int *poptar = alist[pop_tar].automata;
-        int node = dis3(generator) * P;
-        int t = i;
-        for(int j=0; j <P;j++){
-            target[t] = poptar[node];
-            t++;node++;
-        }
+        int node = dis3(generator);
+        target[i] = poptar[node];
+        target[i+N] = poptar[node+N];
     }
-
 
 }
 
@@ -419,12 +426,17 @@ void alphabet_wise_mix(int N,int P,int K,int a_amount,vector<Auto> &alist){
     mt19937 generator(ad());
     std::uniform_int_distribution<> dis4(0,a_amount-1);
     int *target = alist[K].automata;
-    for(int j = 0; j<P;j++) {
-        int pop_tar = dis4(generator);
-        for (int i = j; i < N * P; i = i + N) {
+    int par1 = dis4(generator);
+    int par2 = dis4(generator);
 
-        }
+    // ASSUMING P IS 2
+    for(int i = 0; i<N;i++){
+        target[i] = alist[par1].automata[i];
     }
+    for(int i = N; i<N*P;i++){
+        target[i] = alist[par2].automata[i];
+    }
+
 }
 
 void complete_random(int N,int P,int K,int a_amount,vector<Auto> &alist){
@@ -438,6 +450,24 @@ void complete_random(int N,int P,int K,int a_amount,vector<Auto> &alist){
 
 }
 
+
+void create_cerny(int N, int P , int *&target){
+
+    for(int i = 0 ; i < N ; i++){
+        target[i] = (i+1) % N;
+
+    }
+    for(int i=N; i<N*P;i++){
+        if(i == (N*P-1)){
+            target[i] = 0;
+            break;
+        }
+        target[i] = i%N;
+    }
+
+}
+
+
 // -----------------------------------------------------------------------------------------------
 
 
@@ -446,36 +476,38 @@ int main(int argc,  char** argv)
     int N,P;
     unsigned int seed;
     int auto_amounts;
-    int cycles;
+    unsigned long long int cycles;
     int ratio;
-    
 
+    /*
     if (argc != 6)
     {
-        cout << "Usage: " << argv[0] << " no_states, alphabet_size, population size,cylces,extinction ratio \n" << endl;
+        cout << "Usage: " << argv[0] << " no_states, alphabet_size, population size,cylces, extinction ratio \n" << endl;
         return 1;
     }
     N = atoi(argv[1]);
     P = atoi(argv[2]);
     auto_amounts = atoi(argv[3]);
-    cycles = atoi(argv[4]);
+    cycles = strtoull(argv[4],nullptr,10);
     ratio = atoi(argv[5]);
 
-    //     cin >> N >> P >> auto_amounts >> cycles >> ratio;
+*/
+    cin >> N >> P >> auto_amounts >> cycles >> ratio;
+    int high_ = (N-1)*(N-1);
+    int low = high_ - floor(high_*45/100);
+    int NUM_OF_ELITES = 10;
 
-     int high_ = (N-1)*(N-1);
-     int low = high_ - floor(high_*45/100);
-     int NUM_OF_ELITES = 7;
-
-
+    int *inv_automata_ptrs = new int[P * (N + 1)];
+    int *inv_automata = new int[P * N];
 
     vector<Auto> automata_list;
 
     string file_name = "genetic_log_" + to_string(N) + "_" + to_string(P) +".txt";
     string file_name2  = "high_points_" + to_string(N) + "_" + to_string(P)  + ".txt";
-    fstream out(file_name2, fstream::in | fstream::out | fstream::app);
+    string file_name3  = "elites" + to_string(N) + "_" + to_string(P)  + ".txt";
+    fstream out(file_name3, fstream::in | fstream::out | fstream::app);
     if(!out){
-        fstream out(file_name, fstream::in | fstream::out | fstream::trunc);
+        fstream out(file_name3, fstream::in | fstream::out | fstream::trunc);
     }
 
 
@@ -495,9 +527,10 @@ int main(int argc,  char** argv)
         }
 
         // black magic below
+        /*
         int* inv_automata_ptrs = new int[P * (N + 1)];
         int* inv_automata = new int[P * N];
-
+        */
         for (int i = 0; i < P; ++i) {
             int *a = &(automata[i * N]);
             int* ia = &(inv_automata[i * N]);
@@ -524,17 +557,20 @@ int main(int argc,  char** argv)
             automata_list.push_back(temp);
             //cout << "One added to the list... \n";
         } else {
-	  delete[] automata;   
-	}
+            delete[] automata;
+        }
 
 #ifdef DEBUG
         // printAutomata(automata, N, P);
 #endif
 
-	// it is not synchronizing and/or doesnt have inverse
-	delete[] inv_automata_ptrs;
-	delete[] inv_automata;
-    }
+        // it is not synchronizing and/or doesnt have inverse
+
+        /*
+        delete[] inv_automata_ptrs;
+        delete[] inv_automata;
+        */
+         }
     /*
     cout << "The population for the genetic algorithm has been created... \n";
 
@@ -552,12 +588,31 @@ int main(int argc,  char** argv)
     // begin genetic cycle
     // can easily migrate this into a function
     unsigned long long int begining = 0;
-    int Generation_ = 1;
+    unsigned long long int Generation_ = 1;
+
+
+    // throw in a cerny
+        int *ptr = automata_list[0].automata;
+        //create_cerny(N,P,ptr);
+        PNode *ppath = nullptr;
+        unsigned long long int shortest = shortestPath(ptr, N, P, ppath);
+        ppath = nullptr;
+        automata_list[0].score = shortest;
+
 
 
     while(cycles){
-        if(Generation_ % 100 == 0)
+
+        if(Generation_ % 1000 == 0){
             cout << "Currently in Generation: " << Generation_<<endl;
+           // out<< "Generation: " << Generation_ << endl;
+            /*
+            for (int i = 0;i < NUM_OF_ELITES;i++){
+                out << automata_list[i].score << " ";
+            }
+            out << "\n";
+             */
+        }
         // sort the list
 
 
@@ -567,46 +622,49 @@ int main(int argc,  char** argv)
 
         int modif = (int)floor((auto_amounts*(ratio-1))/ratio);
 
-        // eliminate the unwanted population
-        //automata_list.erase(automata_list.begin()+modif,automata_list.end());
 
 
         // MUTATION LOGIC BELOW
         // mutate < ------- > mutate
-        // TODO : Below goes into infinite so put checks...
 
-        // INT HERE DICTATES THE ELITE NUMBER
-        for(int i=NUM_OF_ELITES;i < automata_list.size();) {
+        for(int i=0;i < automata_list.size();) {
             vector<int> re(N*P);
-            if (dis3(gen) == 5) {
+
+            if (dis3(gen) == 5 || dis3(gen) ==4 || dis3(gen) == 1) {
                 // will mutate now
+                int indic;
                 int *ptr = automata_list[i].automata;
                 for(int j = 0 ; j< N*P;j++){
                     int r = dis2(gen);
 
-
-
                     // ADD THE MUTATION LOGICS BELOW WITH THEIR PROBABILITIES **
                     if(r == 5 || r== 7 || r==0){
-                    re[j] = ptr[j];
-                    ptr[j] = dis(gen);
+                        re[j] = ptr[j];
+                        ptr[j] = dis(gen);
+                        indic = RAND_MUT;
                     }
-                    else if(r==1){
+                    else if(r==1 || r==4 ){
                         re[j] = ptr[j];
                         // mutation method
                         //mutateSelfLoop(ptr,j,P);
                         mutateInDegree(ptr,N,P,j);
+                        indic = MUTATE_INDEG;
+                    }
 
-                    }else if(r==2){
+                    else if(r==2 ){
+                        re[j] = ptr[j];
                         mutateSelfLoop(ptr,j,P);
+                        indic = MUTATE_SELF;
                     }
 
                     // MUTATION LOGICS ABOVE *************************************
 
                 }
+                /*
                 int *inv_automata_ptrs = new int[P * (N + 1)];
                 int *inv_automata = new int[P * N];
-                for (int k = 0; k < P; ++k) {
+                */
+                 for (int k = 0; k < P; ++k) {
                     int *a = &(ptr[k * N]);
                     int* ia = &(inv_automata[k * N]);
                     int* iap = &(inv_automata_ptrs[k * (N + 1)]);
@@ -624,6 +682,7 @@ int main(int argc,  char** argv)
                     unsigned long long int shortest = shortestPath(automata_list[i].automata, N, P, path);
                     automata_list[i].score = shortest;
                     ptr = nullptr;
+                    automata_list[i].stats[indic]++;
                     i++;
                 }else{
                     for(int z=0;z<N*P;z++){
@@ -631,8 +690,6 @@ int main(int argc,  char** argv)
                         if(re[z] != 0) ptr[z] = re[z];
                     }
                 }
-		delete [] inv_automata_ptrs;
-		delete [] inv_automata;
             }
             else{i++;}
 
@@ -642,54 +699,57 @@ int main(int argc,  char** argv)
         // cross < ---  > over
         for(int K=modif; K < automata_list.size();){
 
-                // use the cross over technique you want
+            // use the cross over technique you want
+            int indic_cross;
+            // regular_threeway( N,P,K,auto_amounts,automata_list);
+            int xx = dis2(gen);
+            // CROSS-OVER LOGIC IN THE FOLLOWING BOX ****************************************
+            if(xx == 1 ) {complete_random(N,P,K,auto_amounts,automata_list);indic_cross=COMP_RAND;}
+            else if (xx == 2 || xx == 3) {regular_threeway(N,P,K,auto_amounts,automata_list);indic_cross=THREE_CROSS;}
+            else if(xx==5 || xx==4 ){node_wise_mix(N,P,K,auto_amounts,automata_list); indic_cross=NODE_WISE;}
+            else {alphabet_wise_mix(N,P,K,auto_amounts,automata_list);indic_cross = ALPH_WISE;}
+            // CROSS-OVER LOGIC ABOVE *************indic_cross******************************************
 
-               // regular_threeway( N,P,K,auto_amounts,automata_list);
-                int xx = dis2(gen);
-                // CROSS-OVER LOGIC IN THE FOLLOWING BOX ****************************************
-                if(xx == 1) complete_random(N,P,K,auto_amounts,automata_list);
-                else if (xx == 2 || xx == 3) regular_threeway(N,P,K,auto_amounts,automata_list);
-                else node_wise_mix(N,P,K,auto_amounts,automata_list);
-                // CROSS-OVER LOGIC ABOVE *******************************************************
 
 
+            // black magic below
+            /*
+            int *inv_automata_ptrs = new int[P * (N + 1)];
+            int *inv_automata = new int[P * N];
+            */
+            for (int i = 0; i < P; ++i) {
+                int *a = &(automata_list[K].automata[i * N]);
+                int *ia = &(inv_automata[i * N]);
+                int *iap = &(inv_automata_ptrs[i * (N + 1)]);
 
-                // black magic below
-                int *inv_automata_ptrs = new int[P * (N + 1)];
-                int *inv_automata = new int[P * N];
+                memset(iap, 0, sizeof(int) * (N + 1));
+                for (int j = 0; j < N; j++) { iap[a[j] + 1]++; }
+                for (int j = 1; j <= N; j++) { iap[j] += iap[j - 1]; }
+                for (int j = 0; j < N; j++) { ia[iap[a[j]]++] = j; }
+                for (int j = N; j > 0; j--) { iap[j] = iap[j - 1]; }
+                iap[0] = 0;
+            }
 
-                for (int i = 0; i < P; ++i) {
-                    int *a = &(automata_list[K].automata[i * N]);
-                    int *ia = &(inv_automata[i * N]);
-                    int *iap = &(inv_automata_ptrs[i * (N + 1)]);
-
-                    memset(iap, 0, sizeof(int) * (N + 1));
-                    for (int j = 0; j < N; j++) { iap[a[j] + 1]++; }
-                    for (int j = 1; j <= N; j++) { iap[j] += iap[j - 1]; }
-                    for (int j = 0; j < N; j++) { ia[iap[a[j]]++] = j; }
-                    for (int j = N; j > 0; j--) { iap[j] = iap[j - 1]; }
-                    iap[0] = 0;
+            // check if these things return true
+            bool isSync = syncCheck(automata_list[K].automata, inv_automata_ptrs, inv_automata, N, P);
+            // if it fits our criteria, put it into the list
+            if(isSync){
+                PNode *path = nullptr;
+                unsigned long long int shortest = shortestPath(automata_list[K].automata, N, P, path);
+                automata_list[K].score = shortest;
+                for(int x= 0; x < 7 ; x++){
+                    automata_list[K].stats[x] = 0;
                 }
+                automata_list[K].stats[indic_cross]++;
+                K++;
 
-                // check if these things return true
-                bool isSync = syncCheck(automata_list[K].automata, inv_automata_ptrs, inv_automata, N, P);
-                // if it fits our criteria, put it into the list
-                if(isSync){
-                    PNode *path = nullptr;
-                    unsigned long long int shortest = shortestPath(automata_list[K].automata, N, P, path);
-                    automata_list[K].score = shortest;
-                    K++;
-
-                }
-         
-		delete [] inv_automata;
-		delete [] inv_automata_ptrs;
-         
+            }
         }
         cycles--;
         Generation_++;
+
         /*
-        if(Generation_ %5000 == 0) {
+       if(Generation_ %5000 == 0) {
             out << " Generation: " << Generation_ << "\n";
             unsigned long long int total_score = 0;
 
@@ -708,9 +768,9 @@ int main(int argc,  char** argv)
 
             out << "============================================================================ \n";
         }
-         */
+*/
 
-
+        /*
         for(int ii=0; ii< NUM_OF_ELITES; ii++){
             if(automata_list[ii].score > low){
                 int rndm = dis2(gen);
@@ -725,8 +785,9 @@ int main(int argc,  char** argv)
                     while(check) {
                         // clean the automata
                         complete_random(N, P, ii, auto_amounts, automata_list);
-                        int *inv_automata_ptrs = new int[P * (N + 1)];
-                        int *inv_automata = new int[P * N];
+
+                        //int *inv_automata_ptrs = new int[P * (N + 1)];
+                        //int *inv_automata = new int[P * N];
 
                         for (int i = 0; i < P; ++i) {
                             int *a = &(automata_list[ii].automata[i * N]);
@@ -752,13 +813,16 @@ int main(int argc,  char** argv)
 
                         }
 
-			delete[] inv_automata;
-			delete[] inv_automata_ptrs;
-		    }
+                        //delete[] inv_automata;
+                        //delete[] inv_automata_ptrs;
+
+                         }
 
                 }
             }
         }
+        */
+
 
 
     }
@@ -768,11 +832,30 @@ int main(int argc,  char** argv)
     unsigned long long int final = automata_list[0].score;
     out << begining << " " << final << "\n";
 */
+    /*#define MUTATE_SELF 0;
+#define MUTATE_INDEG 1;
+#define THREE_CROSS 2;
+#define NODE_WISE 3;
+#define COMP_RAND 4;
+#define RAND_MUT 5;
+*/
+    std::string dict[7] ={"MUTATE_SELF","MUTATE_INDEG","THREE_CROSS","NODE_WISE","COMP_RAND","RAND_MUT","ALPH_WISE"};
+    // print what happened to top 10
+    for(int i = 0; i< 10 ;i++){
+        out << automata_list[i].score << "\n";
+        for(int j = 0; j < 7;j++){
+            out  <<dict[j] << ": " << automata_list[i].stats[j] << ", ";
+        }
+        out << "\n";
+        out << " ============================================== \n";
+    }
     /*
      *  Delete everything below here
      */
     for(int i = 0 ; i<automata_list.size();i++){
         delete [] automata_list[i].automata;
     }
+    delete[] inv_automata;
+    delete[] inv_automata_ptrs;
     return 0;
 }
