@@ -331,32 +331,38 @@ bool comparison(Auto a, Auto b){
 // BELOW ARE DIFFERENT MUTATION TECHNIQUES ------------------------------------------------------
 
 void mutateSelfLoop(int *ptr,int loc, int N){
-        ptr[loc] = (loc%N);
+    ptr[loc] = (loc%N);
 };
 
 void mutateInDegree(int *ptr, int N, int P,int j){
     vector<int> indegs(N);
+    int opt = 0;
+    if( j >= N) { opt = 1;} // meaning its B transition
+    else if(j<N) { opt = 2;} // meaning its A transitions
 
-    // calculate the indegs for each Node
-    for(int i=0;i<N*P;i++){
-        indegs[ptr[i]] ++;
+    // go for A's or B's
+    for(int i = N*opt - N;i<N*opt;i++){
+        indegs[ptr[i]]++;
     }
-    // sort(indegs.begin(),indegs.end());
-    /*
-    random_device ran;
-    mt19937 gn(ran());
-    std::uniform_int_distribution<> diss(0,N*P);
-*/
-    int min = N*P+1;
-    int loc;
-    for(int i = 0;i<N;i++){
-        if(indegs[i]<=min) {
-            min = indegs[i];
-            loc = i;
+
+    vector<double> probs(N);
+    for(int i=0; i <  probs.size();i++){
+        if(indegs[i] == 0){ probs[i] = 1.0;}
+        else{
+            probs[i] = 1/(double)indegs[i];
         }
     }
-    ptr[j] = loc;
-
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+    std::sort(probs.begin(),probs.end());
+    double trial = dis(gen);
+    for(int i = 0;i<probs.size(); i++){
+        if(trial< probs[i]){
+            ptr[j] = i;
+            break;
+        }
+    }
 }
 // ------------------------------------------------------------------------------------------------
 
@@ -570,7 +576,7 @@ int main(int argc,  char** argv)
         delete[] inv_automata_ptrs;
         delete[] inv_automata;
         */
-         }
+    }
     /*
     cout << "The population for the genetic algorithm has been created... \n";
 
@@ -592,12 +598,12 @@ int main(int argc,  char** argv)
 
 
     // throw in a cerny
-        int *ptr = automata_list[0].automata;
-        //create_cerny(N,P,ptr);
-        PNode *ppath = nullptr;
-        unsigned long long int shortest = shortestPath(ptr, N, P, ppath);
-        ppath = nullptr;
-        automata_list[0].score = shortest;
+    int *ptr = automata_list[0].automata;
+    //create_cerny(N,P,ptr);
+    PNode *ppath = nullptr;
+    unsigned long long int shortest = shortestPath(ptr, N, P, ppath);
+    ppath = nullptr;
+    automata_list[0].score = shortest;
 
 
 
@@ -605,7 +611,7 @@ int main(int argc,  char** argv)
 
         if(Generation_ % 1000 == 0){
             cout << "Currently in Generation: " << Generation_<<endl;
-           // out<< "Generation: " << Generation_ << endl;
+            // out<< "Generation: " << Generation_ << endl;
             /*
             for (int i = 0;i < NUM_OF_ELITES;i++){
                 out << automata_list[i].score << " ";
@@ -664,7 +670,7 @@ int main(int argc,  char** argv)
                 int *inv_automata_ptrs = new int[P * (N + 1)];
                 int *inv_automata = new int[P * N];
                 */
-                 for (int k = 0; k < P; ++k) {
+                for (int k = 0; k < P; ++k) {
                     int *a = &(ptr[k * N]);
                     int* ia = &(inv_automata[k * N]);
                     int* iap = &(inv_automata_ptrs[k * (N + 1)]);
