@@ -46,7 +46,6 @@ is the transition function (full function) where $\delta: Q \times \Sigma \right
 
 \begin{figure}[ht]
 	\centering
-	\begin{minipage}{.5\textwidth}
 		\centering
 \begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto]
    \node[state] (q_0)   {$q_0$};
@@ -63,9 +62,8 @@ is the transition function (full function) where $\delta: Q \times \Sigma \right
           edge [loop below] node {b} ();
 \end{tikzpicture}
 \caption{An automaton $A_1$}\label{fig:A0}
-\end{minipage}
 \end{figure}
-\par A Deterministic Finite State Machine is a tuple $M = (Q,\delta, \Sigma, X, q_{0}, F)$ where Q is a finite set of states, Σ is finite input alphabet,  $q_{0}$ is the initial state $ q_{0} \in Q $ and F is the final state set $F \subseteq Q $. δ
+\par A Deterministic Finite State Machine is a tuple $M = (Q,\delta, \Sigma, X, q_{0}, F)$ where Q is a finite set of states, $\Sigma$ is finite input alphabet,  $q_{0}$ is the initial state $ q_{0} \in Q $ and F is the final state set $F \subseteq Q $. $\delta$
 is the transition function (full function) where $\delta: Q \times \Sigma \rightarrow (Q, x) ; (q,\sigma) \rightarrow \delta (q,\sigma) \in Q  $ The main difference of FSM from DFA is output symbols.In every transaction, an output symbol $x \in X$ is produced. Since output symbols are not taken into consideration while finding shortest synchronizing sequences, finite state machines are treated as DFAs.
 
 \par An element $w \in \Sigma \textsuperscript{*}$ is called input sequence. Input sequence can be empty in this case denoted the length of the sequence $|w|$ is denoted as zero. Standard transition function returns the output for a single input letter therefore extended transition function, denoted by $\hat{\delta}$, is used for input sequences with $|w| > 1$. As the basis for extension  $\hat{\delta} (q, \epsilon) = q$. If input sequence $w$ is a word of the form $xa$ then $\hat{\delta} (q, w) = \delta(\hat{\delta}(q, x), a)$. In other words extended transition function returns the final state by recursively processing input word w.
@@ -74,14 +72,12 @@ is the transition function (full function) where $\delta: Q \times \Sigma \right
 For an automaton $A = (Q,\delta, \Sigma, q_{0}, F),$ a {\em Synchronizing Sequence (SS)} of $A$ is an input sequence $\bar{w}\in \Sigma^\star$ such that $|\hat{\delta}(Q,\bar{w})| = 1$.
 \end{definition}
 
-For instance, for the automaton $A_{1}$ given in Figure~\ref{fig:A0} and input sequence $w = ab$ all transitions end up with ? $q_{3}$ state no matter what the initial state is.
+For instance, for the automaton $A_{1}$ given in Figure~\ref{fig:A0} and input sequence $w = ab$ all transitions end up with $q_{3}$ state no matter what the initial state is.
 
 \par An FSM does not necessarily have a synchronizing sequence however existence of synchronizing sequence in an FSM is highly probable. Probability of having synchronizing sequence of an random FSM is $1-O(1/|Q|^{|\Sigma|})$
 \cite{berlinkov}. Considering this high possibility, we randomly created sets of automatons and eliminated the ones without synchronizing sequence to constitute synchronizable automaton population. Existence check is polynomially bounded, there is an algorithm with complexity $O(|\Sigma||Q|^2)$ \cite{eppstein_1990} thus constructing an synchronizable automaton is quite fast. Another major problem with SS is finding the shortest synchronizable sequences.  Even though constructing a shortest synchronizing sequence is NP-hard problem, there are well studied heuristics algorithms to find a short SS. Eppstein showed that a short SS can be found using a greedy heuristic in time bounded by $O(n^3 + pn^2)$ where n is the number of states and p is the alphabet size\cite{eppstein_1990}.
 
 \begin{figure}[ht]
-	\centering
-	\begin{minipage}{.5\textwidth}
 		\centering
 \begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto]
    \node[state] (q_0)   {$q_0$};
@@ -98,7 +94,6 @@ For instance, for the automaton $A_{1}$ given in Figure~\ref{fig:A0} and input s
           edge node {b} (q_0);
 \end{tikzpicture}
 \caption{An automaton which has $(n-1)^2$ length reset sequence (Cerný Conjecture)  $A_2$}\label{fig:A0}
-\end{minipage}
 \end{figure}
 
 \newpage
