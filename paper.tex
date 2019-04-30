@@ -1,8 +1,8 @@
-\documentclass[12pt]{article}
+\documentclass[runningheads]{llncs}
 \usepackage[utf8]{inputenc}
 \usepackage{float}
 \usepackage{amsmath}
-\usepackage{amsthm}
+%\usepackage{amsthm}
 \usepackage[colorlinks,citecolor=blue,linkcolor=blue,bookmarks=false,hypertexnames=true]{hyperref}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -11,53 +11,28 @@
 \usepackage[section]{placeins}
 \usepackage[euler]{textgreek}
 \usepackage[T1]{fontenc}
-\usepackage{fix-cm}
-
-\setlength{\tabcolsep}{0.7pt}
-
-\DeclareMathOperator*{\argmin}{argmin}
-\makeatletter
-\def\BState{\State\hskip-\ALG@thistlm}
-\makeatother
-
-\usepackage[hmargin=3cm,vmargin=6.0cm]{geometry}
-%\topmargin=0cm
-\topmargin=-2cm
-\addtolength{\textheight}{6.5cm}
-\addtolength{\textwidth}{2.0cm}
-%\setlength{\leftmargin}{-5cm}
-\setlength{\oddsidemargin}{0.0cm}
-\setlength{\evensidemargin}{0.0cm}
-\hbadness=10000
-
-\newcommand{\HRule}{\rule{\linewidth}{1mm}}
-
-
 
 %misc libraries goes here
 \usepackage{tikz}
 \usetikzlibrary{automata,positioning}
 
-\newtheorem{theorem}{Theorem}
-\newtheorem{definition}{Definition}
-\newtheorem{corollary}{Corollary}
-\newtheorem{lemma}{Lemma}
+\begin{document}
 
 \title{Using Genetic Algorithms to Construct\\ Slowly Synchronizing Finite State Machines}
-\providecommand{\keywords}[1]{\textbf{\textit{Keywords:     }} #1}
-\author{
-Adnan Kaan Ekiz  \and Yiğit Aras Tunalı, \and Şeyma Selcan Mağara, \and Berk Çirişci, \and Kamer Kaya,\and Hüsnü Yenigün
-}
-\date{April, 2019}
-\begin{document}
+
+\author{Adnan Kaan Ekiz  \and Yi\u{g}it Aras Tunal{\i} \and
+\c{S}eyma Selcan Ma\u{g}ara \and Berk \c{C}iri\c{s}ci \and Kamer Kaya \and H\"{u}sn\"{u} Yenig\"{u}n}
+\authorrunning{A. K. Ekiz et al.}
+
+
+\institute{Sabanci University, Faculty of Engineering and Natural Sciences, Istanbul, Turkey}
 \maketitle
-\begin{keywords}
-Finite State Machines, Synchronizing Sequences, Genetic Algorithms
-\end{keywords}
 
 \begin{abstract}
 Computation of a shortest synchronizing sequence of an automaton is an NP-Hard problem.The longest possible shortest path and it's structure is well known and studied. There are various automata having shorter synchronizing length than the maximum but still are considered slowly synchronizing finite state machines. They can be utilized in many ways, such as testing the performance of algorithms for the synchronizing sequences. In this paper we will use a Genetic Algorithm approach to generate slowly synchronizing finite state machines of different sizes.
+\keywords{Finite State Machines \and Synchronizing Sequences \and Genetic Algorithms|}
 \end{abstract}
+
 \section{Introduction}
 The synchronizing (or reset) sequence of an automaton is a specific sequence of inputs that brings all states of deterministic finite automaton to a particular state regardless of the initial state of the system. A DFA is called \textit{synchronizing} if it has a reset word and the minimum length of the synchronizing sequence is called \textit{reset length} or \textit{shortest synchronizing sequence length}.\par
 In 1964, Cerný \cite{cerny} conjunctured that maximum length of the shortest synchronizing sequence is (n-1)\textsuperscript{2} for a DFA with n states. Automata with reset lengths close to the Černý bound, called extremal or slowly synchronizing, usually have many interesting properties \cite{podolak_roman_szykula_zielinski_2017}. However, there are a few known extremal automata  \cite{Ananichev_Gusev_Volkov_2010}.
@@ -125,10 +100,7 @@ For instance, for the automaton $A_{1}$ given in Figure~\ref{fig:A0} and input s
 \end{minipage}
 \end{figure}
 
-
-
-
 \newpage
-\bibliographystyle{ieeetr}
-\bibliography{biby.bib}
+\bibliographystyle{splncs04}
+\bibliography{biby}
 \end{document}
